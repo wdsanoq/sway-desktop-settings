@@ -17,20 +17,14 @@
     "height": 30,
     "position": "top",
 
-    "modules-left": [
-        "custom/menu",
-        "sway/workspaces",
-        "custom/scratchpad"
-    ],
-    "modules-center": [
-        "custom/wf-recorder",
-        "sway/mode"
-    ],
+    "modules-left": ["custom/menu", "sway/workspaces", "custom/scratchpad"],
+    "modules-center": ["custom/wf-recorder", "sway/mode", "custom/weather"],
     "modules-right": [
         // informational
         "sway/language",
         "custom/github",
         "custom/clipboard",
+        "custom/zeit",
         "cpu",
         "memory",
         "battery",
@@ -66,9 +60,8 @@
         },
         "format-charging": " {capacity}%",
         "format": "{icon} {capacity}%",
-        "format-icons": ["","","","","",""],
-        "tooltip": true,
-        "bat": "BAT0"
+        "format-icons": ["", "", "", "", "", ""],
+        "tooltip": true
     },
 
     "clock": {
@@ -124,8 +117,8 @@
     "backlight": {
         "format": "{icon} {percent}%",
         "format-icons": ["", "", ""],
-        "on-scroll-up": "light -A 1",
-        "on-scroll-down": "light -U 1"
+        "on-scroll-up": "swaymsg exec \\$brightness_up",
+        "on-scroll-down": "swaymsg exec \\$brightness_down"
     },
 
     "pulseaudio": {
@@ -140,16 +133,18 @@
             "default": ["奄", "奔", "墳"]
         },
         "tooltip-format": "{icon} {volume}% {format_source}",
-        "on-click": "swaymsg exec \\$pulseaudio"
+        "on-click": "swaymsg exec \\$pulseaudio",
+        "on-scroll-up": "swaymsg exec \\$volume_up",
+        "on-scroll-down": "swaymsg exec \\$volume_down"
     },
 
     "temperature": {
-      "critical-threshold": 90,
-      "interval": 5,
-      "format": "{icon} {temperatureC}°C",
-      "format-icons": ["","",""],
-      "tooltip": false,
-      "on-click": "swaymsg exec \"\\$term_float watch sensors\""
+        "critical-threshold": 90,
+        "interval": 5,
+        "format": "{icon} {temperatureC}°C",
+        "format-icons": ["", "", ""],
+        "tooltip": false,
+        "on-click": "swaymsg exec \"\\$term_float watch sensors\""
     },
 
     "tray": {
@@ -169,7 +164,8 @@
     "custom/menu": {
         "format": "",
         "on-click": "swaymsg exec \\$menu",
-        "tooltip": false
+        "tooltip": false,
+        "rotate": 180
     },
 
     "bluetooth": {
@@ -182,18 +178,18 @@
         "on-click": "blueberry",
         "tooltip-format": "{}"
     },
-    
+
     "sway/language": {
         "format": " {}",
         "min-length": 5,
         "tooltip": false,
         "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next"
     },
-    
+
     "custom/scratchpad": {
         "interval": "once",
         "return-type": "json",
-        "format" : "{icon}",
+        "format": "{icon}",
         "format-icons": {
             "one": "类",
             "many": "缾"
@@ -202,15 +198,15 @@
         "on-click": "swaymsg 'scratchpad show'",
         "signal": 7
     },
-    
+
     "custom/sunset": {
         "interval": "once",
         "tooltip": false,
         "return-type": "json",
-        "format" : "{icon}",
+        "format": "{icon}",
         "format-icons": {
-            "on": "" ,
-            "off": "" 
+            "on": "",
+            "off": ""
         },
         "exec": "/usr/share/sway/scripts/sunset.sh",
         "on-click": "/usr/share/sway/scripts/sunset.sh toggle; pkill -RTMIN+6 waybar",
@@ -221,21 +217,21 @@
     "custom/wf-recorder": {
         "interval": "once",
         "return-type": "json",
-        "format" : "{}",
+        "format": "{}",
         "tooltip-format": "{tooltip}",
         "exec": "echo '{\"class\": \"recording\",\"text\":\"雷\",\"tooltip\":\"press $mod+Esc to stop recording\"}'",
         "exec-if": "pgrep wf-recorder",
         "on-click": "killall -s SIGINT wf-recorder",
         "signal": 8
-	},
+    },
 
     "custom/github": {
         "interval": 300,
         "tooltip": false,
         "return-type": "json",
-        "format" : " {}",
+        "format": " {}",
         "exec": "gh api '/notifications' -q '{ text: length }' | cat -",
-        "exec-if": "command -v gh >/dev/null && gh auth status 2>&1 | grep -q -m 1 'Logged in' && gh api '/notifications' -q 'length' | grep -q -m 1 '0' ; test $? -eq 1",
+        "exec-if": "[ -x \"$(command -v gh)\" ] && gh auth status 2>&1 | grep -q -m 1 'Logged in' && gh api '/notifications' -q 'length' | grep -q -m 1 '0' ; test $? -eq 1",
         "on-click": "xdg-open https://github.com/notifications && sleep 30 && pkill -RTMIN+4 waybar",
         "signal": 4
     },
@@ -244,10 +240,10 @@
         "interval": "once",
         "tooltip": true,
         "return-type": "json",
-        "format" : "{icon}",
+        "format": "{icon}",
         "format-icons": {
-            "Playing": "奈",
-            "Paused": ""
+            "Playing": "",
+            "Paused": "奈"
         },
         "exec": "playerctl metadata --format '{\"alt\": \"{{status}}\", \"tooltip\": \"{{playerName}}:  {{markup_escape(title)}} - {{markup_escape(artist)}}\" }'",
         "on-click": "playerctl play-pause; pkill -RTMIN+5 waybar",
@@ -256,11 +252,61 @@
         "on-scroll-down": "playerctl position 10-; pkill -RTMIN+5 waybar",
         "signal": 5
     },
+
     "custom/clipboard": {
         "format": "",
+        "interval": "once",
         "return-type": "json",
-        "on-click": "swaymsg -q exec '$clipboard'",
+        "on-click": "swaymsg -q exec '$clipboard'; pkill -RTMIN+9 waybar",
+        "on-click-right": "swaymsg -q exec '$clipboard-del'; pkill -RTMIN+9 waybar",
+        "on-click-middle": "rm -f ~/.cache/cliphist/db; pkill -RTMIN+9 waybar",
         "exec": "printf '{\"tooltip\":\"%s\"}' $(cliphist list | wc -l)",
-        "exec-if": "[ $(cliphist list | wc -l) -gt 0 ]"
+        "exec-if": "[ -x \"$(command -v cliphist)\" ] && [ $(cliphist list | wc -l) -gt 0 ]",
+        "signal": 9
+    },
+
+    "custom/weather": {
+        "icon-size": 42,
+        "format": "{icon} {}",
+        "tooltip": true,
+        "interval": 3600,
+        // accepts a location as an argument (in quotes)
+        "exec": "/usr/share/sway/scripts/weather.py",
+        "return-type": "json",
+        "format-icons": {
+            "Unknown": "",
+            "Cloudy": "摒",
+            "Fog": "",
+            "HeavyRain": "",
+            "HeavyShowers": "",
+            "HeavySnow": "",
+            "HeavySnowShowers": "ﰕ",
+            "LightRain": "",
+            "LightShowers": "",
+            "LightSleet": "",
+            "LightSleetShowers": "",
+            "LightSnow": "",
+            "LightSnowShowers": "ﭽ",
+            "PartlyCloudy": "",
+            "Sunny": "",
+            "ThunderyHeavyRain": "ﭼ",
+            "ThunderyShowers": "",
+            "ThunderySnowShowers": "",
+            "VeryCloudy": ""
+        }
+    },
+
+    "custom/zeit": {
+        "return-type": "json",
+        "interval": "once",
+        "format": "{icon}",
+        "format-icons": {
+            "tracking": "華",
+            "stopped": ""
+        },
+        "exec": "/bin/sh /usr/share/sway/scripts/zeit.sh status",
+        "on-click": "/bin/sh /usr/share/sway/scripts/zeit.sh click; pkill -RTMIN+10 waybar",
+        "exec-if": "[ -x \"$(command -v zeit)\" ]",
+        "signal": 10
     }
 }
