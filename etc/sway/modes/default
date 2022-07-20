@@ -8,10 +8,10 @@ $bindsym $mod+Return exec $term
 ## Action // Kill focused window ##
 $bindsym $mod+Shift+q kill
 
-## Launch // Launcher ##
+## Launch // Open launcher ##
 $bindsym $mod+d exec $menu
 
-## Launch // Clipboard ##
+## Launch // Open clipboard ##
 $bindsym $mod+Shift+p exec $clipboard
 
 # Drag floating windows by holding down $mod and left mouse button.
@@ -96,6 +96,18 @@ $bindsym $mod+Shift+7 move container to workspace $ws7, exec $focus_ws $ws7
 $bindsym $mod+Shift+8 move container to workspace $ws8, exec $focus_ws $ws8
 $bindsym $mod+Shift+9 move container to workspace $ws9, exec $focus_ws $ws9
 $bindsym $mod+Shift+0 move container to workspace $ws10, exec $focus_ws $ws10
+
+## Launch // Open launcher in a new workspace ##
+$bindsym $mod+Shift+d exec /usr/share/sway/scripts/first-empty-workspace.py --switch, exec $menu
+
+## Navigation // Switch to a new workspace ##
+$bindsym $mod+n exec /usr/share/sway/scripts/first-empty-workspace.py --switch
+
+## Action // Move focused window to a new workspace ##
+$bindsym $mod+Shift+n exec /usr/share/sway/scripts/first-empty-workspace.py --move
+
+## Action // Move focused window to a new workspace and switch there ##
+$bindsym $mod+Shift+m exec /usr/share/sway/scripts/first-empty-workspace.py --move --switch
 
 #
 # Layout stuff:
